@@ -1,0 +1,33 @@
+WORKERS_NUMBER = 2
+
+Vagrant.configure("2") do |config|
+
+
+  config.vm.provider :aws do |aws|
+    aws.access_key_id = "foo"
+    aws.secret_access_key = "bar"
+    aws.region = "us-east-1"
+
+    aws.region_config "us-east-1", :ami => "ami-12345678"
+
+    aws.region_config "us-west-2" do |region|
+      region.ami = "ami-87654321"
+      region.keypair_name = "company-west"
+    end
+  end
+end
+
+    (1..WORKERS_NUMBER).each do |i|
+        config.vm.define "worker-#{i}" do |node|
+            aws.subnet_id "subnet-09361f6a9cdbd4efc", ip: "192.168.50.#{i + 15}"
+            aws.aws.tags = { 'Name' => 'worker', 'Some Key' => 'worker-#{i}' }
+            aws.elb = "production-web"
+            aws.vm.provision "ansible_local" do |ansible|
+                ansible.playbook = "kubernetes-setup/node-playbook.yml"
+                ansible.extra_vars = {
+                    node_ip: "192.168.50.#{i + 15}",
+                }
+            end
+        end
+    end
+end
