@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: deploy-app
+  labels:
+    app: myapp-deploy-lable
+    tier: frontend
+spec:
+# here to make replica or multie replica if one down new will up this to save number of pods always shuold be run all time 
+  replicas: 2
+  selector:
+    matchLabels:
+      name: myapp-deploy
+      tier: frontend
+  template:
+    metadata:
+      name: APP-F
+      labels:
+        name: myapp-deploy
+        tier: frontend
+    spec:
+      containers:
+      - name: APP-F-Container
+        image: mmamoon/demo-test:1.0
+        ports:
+          - containerPort: 8080
+        env:
+          - name: mongoURI
+            value: mongodb://mongo:8081
+            #also can i ues configMap to put all variable in file and call here from file
+        livenessProbe:
+          httpGet:
+            path: /health.html
+            port: 8080
+          initialDelaySeconds: 3
+          periodSeconds: 3
+        volumeMounts:
+        - mountPath: /test-ebs
+          name: test-volume
+      volumes:
+        - name: test-volume
+    # This AWS EBS volume must already exist.
+          awsElasticBlockStore:
+            volumeID: vol-0edd6d691eb848827
+            fsType: ext4

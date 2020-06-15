@@ -1,0 +1,35 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: db-app
+  labels:
+    app: db-deploy
+    tier: backend
+spec:
+  # modify replicas according to your case
+  replicas: 1
+  selector:
+    matchLabels:
+      name: db-application
+      tier: backend
+  template:
+    metadata:
+      name: db
+      labels:
+        name: db-application
+        tier: backend
+        
+    spec:
+      containers:
+      - name: db-mongo
+        image: mongo:latest
+        ports:
+          - containerPort: 27017
+
+        volumeMounts:
+        - mountPath: /usr/src/app
+          name: db-vol
+      volumes:
+        - name: db-vol
+          persistentVolumeClaim:
+            claimName: db-pv
